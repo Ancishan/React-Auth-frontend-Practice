@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
-import { Form, Button } from 'react-bootstrap';
+import React, { useState } from "react";
+import { Form, Button, Toast, ToastContainer } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Registration = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
+    name: "",
+    email: "",
+    password: "",
   });
 
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [showToast, setShowToast] = useState(false); // For Bootstrap Toast
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState("success");
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -21,40 +26,69 @@ const Registration = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Basic validation
-    if (!formData.name || !formData.email || !formData.password) {
-      setError('All fields are required!');
-      return;
-    }
-
-    setError(''); // Clear any previous errors
-
     try {
-      const response = await fetch('http://localhost:5001/user/register', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5001/user/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
       if (response.ok) {
-        setSuccessMessage('Registration successful!');
-        setFormData({ name: '', email: '', password: '' }); // Reset the form
+        toast.success(result.message || "🎉 Registration successful!");
+        
+        // For Bootstrap Toast
+        setToastMessage(result.message || "Registration successful!");
+        setToastVariant("success");
+        setShowToast(true);
+
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+        });
+
+        // Redirect after short delay
+        setTimeout(() => navigate("/login"), 1500);
       } else {
-        setError(data.message || 'Something went wrong. Please try again.');
+        toast.error(result.message || "❌ Registration failed!");
+        
+        // For Bootstrap Toast
+        setToastMessage(result.message || "Registration failed!");
+        setToastVariant("danger");
+        setShowToast(true);
       }
-    } catch (err) {
-      setError('Failed to register. Please try again later.');
+    } catch (error) {
+      console.error(error);
+      toast.error(`⚠️ Something went wrong: ${error.message}`);
+
+      // For Bootstrap Toast
+      setToastMessage(`Something went wrong: ${error.message}`);
+      setToastVariant("danger");
+      setShowToast(true);
     }
   };
 
   return (
     <div className="container mt-5">
       <h1 className="text-center mb-4">Please Register</h1>
+      
+      {/* Bootstrap Toast Notification */}
+      <ToastContainer position="top-end" className="p-3">
+        <Toast
+          bg={toastVariant}
+          show={showToast}
+          onClose={() => setShowToast(false)}
+          delay={3000}
+          autohide
+        >
+          <Toast.Body className="text-white">{toastMessage}</Toast.Body>
+        </Toast>
+      </ToastContainer>
+
       <Form onSubmit={handleSubmit}>
         <Form.Group className="mb-3" controlId="formBasicName">
           <Form.Label>Name</Form.Label>
@@ -89,11 +123,8 @@ const Registration = () => {
           />
         </Form.Group>
 
-        {error && <div className="alert alert-danger">{error}</div>}
-        {successMessage && <div className="alert alert-success">{successMessage}</div>}
-
         <Button variant="dark" type="submit" className="w-100">
-          Submit
+          Registration
         </Button>
       </Form>
     </div>

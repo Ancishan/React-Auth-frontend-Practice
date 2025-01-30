@@ -5,9 +5,6 @@ import Login from "./pages/auth/Login";
 import Dashboard from "./pages/dashboard/Dashboard";
 
 
-
-
-
 function App() {
   return (
     <>
@@ -17,6 +14,7 @@ function App() {
       <Route path="/login" element={<Login></Login>}></Route>
       <Route path="/dashboard" element={<Dashboard></Dashboard> }></Route>
     </Routes>
+    
     </>
   )
 }
